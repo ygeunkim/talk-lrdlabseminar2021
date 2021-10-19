@@ -1,0 +1,315 @@
+---
+title: "R for Statistics Research"
+author: "Young Geun Kim^[[ygeunkim.github.io](https://ygeunkim.github.io)]"
+institute: "[Department of Statistics](https://stat.skku.edu/stat/index.jsp)"
+date: "`r format(as.Date('2021-10-25'), '%d %b, %Y')` (updated: `r format(Sys.Date(), '%d %b, %Y')`)"
+bibliography: "../docs/latex/talkref.bib"
+biblio-style: "apalike"
+output:
+  bookdown::beamer_presentation2:
+    toc: yes
+    slide_level: 2
+    theme: "Antibes"
+    colortheme: "beaver"
+    fonttheme: "professionalfonts"
+    citation_package: natbib
+    latex_engine: lualatex
+    includes:
+      in_header: "../docs/latex/preamble.tex"
+knit:
+  (function(inputFile, encoding) {
+    rmarkdown::render(input = inputFile, encoding = encoding, output_dir = "../output/slides")
+  })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  out.width = "70%",
+  fig.align = "center",
+  fig.width = 6,
+  fig.pos = "H",
+  fig.asp = .618
+)
+knitr::knit_hooks$set(
+  document = function(x) {
+    sub("\\usepackage[]{color}", "\\usepackage{xcolor}", x, fixed = TRUE)
+  }
+)
+options(digits = 3)
+options(knitr.kable.NA = "")
+options(kableExtra.latex.load_packages = FALSE)
+```
+
+# Introductory R Functions
+
+## Class - Vector
+
+```{r}
+(x <- c(2.1, 4.2, 3.3, 5.4))
+class(x)
+```
+
+- Vectorized code gives the fast result
+- `rowSums()`, `colSums()`, `rowMeans()`, `colMeans()` are faster than `apply()` [@Wickham:2019vd] \emoji{face-with-monocle}
+
+## Class - Data frame
+
+```{r}
+(df <- data.frame(x = 1:2, y = 2:1, z = letters[1:2]))
+class(df)
+```
+
+- Data for data analysis might be data frame
+- Indexing in data frame connects to data transformation
+
+```{r}
+y <- MASS::Boston[, c("medv", "lstat", "age")]
+head(y)
+```
+
+## Data Analysis using data frame
+
+Multiple linear regression for `medv` ~ `lstat` + `age`:
+
+```{r}
+lm(medv ~ ., data = y)
+```
+
+- Data frame is proper to use with many `R` model functions.
+
+## Class - List
+
+Contains any object in each element:
+
+```{r}
+(z <- list(a = x, b = df))
+class(z)
+```
+
+## Other Classes
+
+- `matrix` and `array`
+    - 2d matrix: linear algebra
+    - more than 2d: used in deep learning ("tensor")
+- `factor`
+- Date: `POSIXct`, `POSIXt`, etc
+- Time series: `ts`
+
+```{r}
+ts(1:10, frequency = 4, start = c(1959, 2))
+```
+
+## Time Series Model
+
+```{r}
+lh
+class(lh)
+```
+
+Fit AR(1) using `arima` function:
+
+```{r}
+arima(lh, order = c(1,0,0))
+```
+
+## Tidy Data
+
+```{r tidyfig, echo=FALSE, fig.cap="Tidy Data"}
+knitr::include_graphics("../docs/images/tidy-1.png")
+```
+
+- For easier data analysis, @JSSv059i10 suggests tidy representation of dataset, called **tidy data**.
+
+```{r}
+library(tibble)
+tibble(
+  x = 1:3,
+  y = 1,
+  z = x^2 + y
+)
+```
+
+## `read.csv` and `readr::read_csv`
+
+- `read.csv(file)`: default function to import csv file
+- `readr::read_csv(file)`: read csv file to `tibble`
+    - Use this function \emoji{smiling-face-with-sunglasses}
+
+## Non-tidy Data
+
+```{r}
+tidyr::table4a
+```
+
+## Data Wrangling
+
+```{r wranglefig, echo=FALSE, fig.cap="Steps of Data Analysis"}
+knitr::include_graphics("../docs/images/wrangle.png")
+```
+
+- Since many datasets are not tidy, we need data wrangling step
+- `dplyr` provides data manipulation functions
+- `tidyr` package does this
+
+## `dplyr`
+
+- `mutate()` adds a column
+- `summarise()` summarizes variables
+- et cetera
+
+## `tidyr`
+
+`tidyr` package can tidy data-set. From @Wickham:r4ds,
+
+- `pivot_longer()`: Figure \@ref(fig:longfig)
+- `pivot_wider()`: Figure \@ref(fig:widefig)
+
+::: columns
+
+:::: column
+```{r longfig, echo=FALSE, fig.cap="Gather", out.width="90%"}
+knitr::include_graphics("../docs/images/long.png")
+```
+::::
+
+:::: column
+```{r widefig, echo=FALSE, fig.cap="Spread", out.width="90%"}
+knitr::include_graphics("../docs/images/wide.png")
+```
+::::
+
+:::
+
+## Large Data
+
+- When data file is too large
+- `data.table` package focuses on memory optimization
+- `read.csv` or `read_csv` can mistakenly read string as factor
+- but `data.table::fread()` do not
+
+## Visualization
+
+| `ggplot2` | base plot |  
+|:---------:|:---------:|  
+|grammar of graphics|pen on paper model|  
+
+### `ggplot2`
+
+- Data: data frame (`mpg`)
+- Aesthetic mapping: `aes()`
+    - x-axis: `displ`
+    - y-axis: `hwy`
+- Layers: `geom_*()` function
+    - scatter plot: `geom_point()`
+    - smoothing: `geom_smooth()`
+
+## Example
+
+```{r ggplotfig, fig.cap="ggplot example"}
+library(ggplot2)
+#-------------------
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_smooth() +
+  theme_minimal()
+```
+
+## \emoji{star-struck} Simulation \emoji{star-struck}
+
+
+
+
+## Reproducible Documents
+
+::: columns
+
+:::: column
+- Data can be changed while writing the document
+- R Markdown helps reproducibility by integrating Markdown and `R`.
+- Bookdown is a package for authoring books, but it also provides a function for single document: `bookdown::*_document2`
+- See @Xie:2018ui and @Xie:2016uz.
+::::
+
+:::: column
+```{r rmdfig1, echo=FALSE, fig.cap="Making R Markdown", out.width="50%"}
+knitr::include_graphics("../docs/images/rmd-01.png")
+```
+
+```{r rmdfig2, echo=FALSE, fig.cap="rmd Default", out.width="50%"}
+knitr::include_graphics("../docs/images/rmd-02.png")
+```
+::::
+
+:::
+
+## Style Guides
+
+- See the `tidyverse style guide`^[[https://style.tidyverse.org](https://style.tidyverse.org)]
+- NOT google's
+
+## Project-Oriented Workflow
+
+
+# Parallel Computations
+
+## `parLapply`, `parSapply`, and `parApply`
+
+## `foreach`
+
+## `doMC::registerDoMC`
+
+## `mclapply`
+
+## `pvec`
+
+## Reproducible Results
+
+## Parallel Options in Popular Funtions
+
+## Simulation using Parallelization
+
+## `Rcpp`
+
+
+# R Packages
+
+## Sources
+
+- @Wickham:2015wq
+
+## `devtools`
+
+## Structure and Metadata
+
+## `usethis`
+
+## Documentation
+
+## Build
+
+## Check
+
+## Vignettes
+
+## Test
+
+## Data
+
+
+# Additional Tips
+
+## `xlsx2csv`
+
+## Pipe
+
+## `kable` and `kableExtra`
+
+## Why `tidyverse`?
+
+## `tidyverts`
+
+
+<!-- cite -->
+# Sources

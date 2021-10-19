@@ -2,3 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+# binary
+*.xlsx
+*.csv
+images/
+*.log
+# slide
+index_files/
+index_cache/
