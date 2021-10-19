@@ -1,0 +1,28 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "output/figures/README-",
+  # custom setting-----------------
+  out.width = "70%",
+  fig.align = "center",
+  fig.width = 6,
+  fig.asp = .618
+)
+options(digits = 3)
+```
+
+### Talk on LRD Lab Seminar about "R Statistical Computation and Packages"
+
+This is a a repository that includes the slide of talk on LRD lab seminar on `r format(as.Date('2021-10-25'), '%d %b, %Y')`.
+
+- R operations for statists research
+- Parellel computation
+- Making R packages
+- Additional tips
