@@ -42,6 +42,13 @@ options(knitr.kable.NA = "")
 options(kableExtra.latex.load_packages = FALSE)
 ```
 
+```{r pkg, include=FALSE, message=FALSE}
+library(tidyverse)
+library(data.table)
+library(forecast)
+```
+
+
 # Introductory R Functions
 
 ## Class - Vector
@@ -56,18 +63,22 @@ class(x)
 
 ## Class - Data frame
 
+\tiny
 ```{r}
 (df <- data.frame(x = 1:2, y = 2:1, z = letters[1:2]))
 class(df)
 ```
+\normalsize
 
 - Data for data analysis might be data frame
 - Indexing in data frame connects to data transformation
 
-```{r}
+\tiny
+```{r, size='tiny'}
 y <- MASS::Boston[, c("medv", "lstat", "age")]
 head(y)
 ```
+\normalsize
 
 ## Data Analysis using data frame
 
@@ -103,45 +114,38 @@ ts(1:10, frequency = 4, start = c(1959, 2))
 
 ## Time Series Model
 
+\tiny
 ```{r}
 lh
 class(lh)
 ```
+\normalsize
 
 Fit AR(1) using `arima` function:
 
-```{r}
+\tiny
+```{r, size='tiny'}
 arima(lh, order = c(1,0,0))
 ```
+\normalsize
 
 ## Tidy Data
 
-```{r tidyfig, echo=FALSE, fig.cap="Tidy Data"}
+```{r tidyfig, echo=FALSE, fig.cap="Tidy Data", out.width="50%"}
 knitr::include_graphics("../docs/images/tidy-1.png")
 ```
 
 - For easier data analysis, @JSSv059i10 suggests tidy representation of dataset, called **tidy data**.
-
-```{r}
-library(tibble)
-tibble(
-  x = 1:3,
-  y = 1,
-  z = x^2 + y
-)
-```
+    1. Each variable must have its own column.
+    2. Each observation must have its own row.
+    3. Each value must have its own cell.
+- `tibble` package
 
 ## `read.csv` and `readr::read_csv`
 
 - `read.csv(file)`: default function to import csv file
 - `readr::read_csv(file)`: read csv file to `tibble`
     - Use this function \emoji{smiling-face-with-sunglasses}
-
-## Non-tidy Data
-
-```{r}
-tidyr::table4a
-```
 
 ## Data Wrangling
 
@@ -153,11 +157,52 @@ knitr::include_graphics("../docs/images/wrangle.png")
 - `dplyr` provides data manipulation functions
 - `tidyr` package does this
 
+## Tidy Data
+
+```{r}
+tidyr::table1
+```
+
 ## `dplyr`
 
-- `mutate()` adds a column
-- `summarise()` summarizes variables
-- et cetera
+- `filter()` picks observations using logical conditions
+- `arrange()` reorders the rows
+- `select()` picks variables by column names
+- `mutates()` creates new variables with functions
+- `summarise()` collapses many values to a single value, i.e. summary statistic
+
+## Example
+
+`group_by()`: excecute function for each group:
+
+```{r}
+tidyr::table1 %>% 
+  group_by(country) %>% 
+  summarise(
+    average = mean(population), 
+    std = sd(population)
+  )
+```
+
+## Non-tidy Data 1
+
+```{r}
+tidyr::table4a
+```
+
+- values (year) are in variable (`1999`, `2000`)
+- How to tidy? Gather these two variables into one variable.
+
+## Non-tidy Data 2
+
+\tiny
+```{r}
+tidyr::table2
+```
+\normalsize
+
+- Looking at `type`, each observation does not have its own row.
+- Then spread `type` taking values of `count`
 
 ## `tidyr`
 
@@ -208,8 +253,6 @@ knitr::include_graphics("../docs/images/wide.png")
 ## Example
 
 ```{r ggplotfig, fig.cap="ggplot example"}
-library(ggplot2)
-#-------------------
 ggplot(mpg, aes(x = displ, y = hwy)) +
   geom_point() +
   geom_smooth() +
@@ -218,8 +261,153 @@ ggplot(mpg, aes(x = displ, y = hwy)) +
 
 ## \emoji{star-struck} Simulation \emoji{star-struck}
 
+- Monte Carlo simulation (parametric bootstrap)
+- Bootstrap
 
+## Monte Carlo Simulation
 
+```{r simulfig, echo=FALSE, fig.cap="Simulating Our Model"}
+knitr::include_graphics("../docs/images/simul-01.png")
+```
+
+## Monte Carlo Simulation
+
+::: {.example #mcex name="Any quantity of interest"}
+Suppose that $X_1, X_2 \iid N(0, 1)$. Estimate $\theta = \Ex \lvert X_1 - X_2 \rvert$.
+:::
+
+\begin{algorithm}[H] \label{alg:mcsimul}
+  \SetAlgoLined
+  \SetKwInOut{Input}{Input}
+  \SetKwInOut{Output}{Output}
+  \Input{distribution $f$, Number of iteration $M$}
+  \For{$m \leftarrow 1$ \KwTo $M$}{
+    Generate $(X_1^{(m)}, X_2^{(m)}) \iid N(0, 1)$\;
+    Compute $\hat\theta^{(m)} = \lvert X_1^{(m)} - X_2^{(m)} \rvert$\;
+  }
+  Draw a histogram\;
+  \Output{$\{ \hat\theta^{(1)}, \ldots, \hat\theta^{(M)} \}$}
+  \caption{Empirical distribution of $\hat\theta$}
+\end{algorithm}
+
+## MC Estimates
+
+- Recall if you took statistical computing (STA5011) course \emoji{beaming-face-with-smiling-eyes}
+- MC estimator: $\bar{\hat\theta} = \frac{1}{M} \sum\limits_{m = 1}^M\hat\theta_m^{(m)}$
+- MC standard error: $\widehat{SE}(\hat\theta) = \sqrt{\frac{1}{M - 1}\sum\limits_{m = 1}^M(\hat\theta^{(m)} - \bar{\hat\theta})}$
+- MSE
+- CI
+
+## `R` programming for Example \@ref(exm:mcex)
+
+- Generation can be done by matrix
+- Compuation can be vectorized
+
+```{r, size='tiny'}
+# MC setting-------------------------
+num_mc <- 2
+num_iter <- 1000
+set.seed(1)
+# X1, X2 ~ N(0, 1)-------------------
+data_mc <- 
+  rnorm(num_mc * num_iter) %>% 
+  matrix(ncol = 2, byrow = TRUE)
+# theta = abs(data[,1] - data[,2])---
+emp_theta <- abs(data_mc[,1] - data_mc[,2])
+```
+
+## Empirical distribution
+
+```{r mcempfig, fig.cap="Empirical distribution of $\\hat\\theta$ for $\\lvert X_1 - X_2 \\rvert$"}
+qplot(emp_theta, geom = "histogram", bins = 30) +
+  theme_minimal() +
+  xlab(expression(theta))
+```
+
+## Estimates
+
+Estimator
+
+```{r}
+mean(emp_theta)
+```
+
+SE:
+
+```{r}
+sd(emp_theta)
+```
+
+## Bootstrap
+
+```{r bootfig, echo=FALSE, fig.cap="Empirical Distribution of Bootstrap"}
+knitr::include_graphics("../docs/images/simul-02.png")
+```
+
+## Bootstrap Algorithm
+
+\begin{algorithm}[H] \label{alg:algboot}
+  \SetAlgoLined
+  \SetKwInOut{Input}{input}
+  \SetKwInOut{Output}{output}
+  \KwData{$n$ observations $x_1, \ldots, x_n$}
+  \Input{statistic of interest $\hat\theta$, the number of bootstrap replicates $B$}
+  \For{$b \leftarrow 1$ \KwTo $B$}{
+    Sampling with replacement $X_{1}^{(b)}, \ldots, X_n^{(b)}$ from the observed sample\;
+    Compute estimate $$\hat\theta(X_{1}^{(b)}, \ldots, X_n^{(b)}) \equiv \hat\theta_b^{\ast}$$\;
+  }
+  \Output{Bootstrap replications $\{ \hat\theta_1^\ast, \ldots, \hat\theta_B^\ast \}$}
+  \caption{Bootstrap for $\hat\theta$}
+\end{algorithm}
+
+## Bootstrap Estimates
+
+Bootstrap standard error:
+
+$$\hat\sigma_B = \bigg[ \frac{1}{B - 1} \sum_{b = 1}^B (\hat\theta_b^{\ast} - \overline{\hat\theta^{\ast}})^2 \bigg]^{\frac{1}{2}}$$
+
+where
+
+$$\overline{\hat\theta^{\ast}} = \frac{1}{B} \sum\limits_{b = 1}^B \hat\theta_b^{\ast}$$
+
+## In `R`
+
+```{r}
+resample <- function(x) {
+  n <- length(x)
+  # sampling with replacement---------------
+  x[sample(1:n, size = n, replace = TRUE)] %>% 
+    # estimator-----------------------------
+    mean()
+}
+# example data------------------------------
+unif_sample <- runif(50, max = 50)
+```
+
+## `for` loop
+
+```{r}
+resample_for <- function(x, B = 1000) {
+  res <- numeric(B)
+  for (b in 1:B) {
+    res[b] <- resample(x = x)
+  }
+  res
+}
+```
+
+## Result
+
+```{r bootempfig, fig.cap="Bootstrap Replicates of Sample Mean", echo=FALSE}
+set.seed(1)
+qplot(
+  resample_for(unif_sample, 1000),
+  geom = "histogram", 
+  bins = 30
+) +
+  theme_minimal() +
+  xlab(expression(theta))
+```
 
 ## Reproducible Documents
 
@@ -251,65 +439,415 @@ knitr::include_graphics("../docs/images/rmd-02.png")
 
 ## Project-Oriented Workflow
 
+- [https://www.tidyverse.org/blog/2017/12/workflow-vs-script/](https://www.tidyverse.org/blog/2017/12/workflow-vs-script/)
+- Directory: the project folder
+    - useful when sharing with other people
+    - `renv` package: save every package in the project using into the project folder
+- [https://www.r-bloggers.com/2018/08/structuring-r-projects/](https://www.r-bloggers.com/2018/08/structuring-r-projects/)
+    - Use the efficient structure
 
 # Parallel Computations
 
-## `parLapply`, `parSapply`, and `parApply`
+## Sources
+
+- Books: 
+    - @mccallum2012
+    - @Matloff:2015wi
+- Blogs:
+    - [https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html](https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html)
+    - [https://www.blasbenito.com/post/02_parallelizing_loops_with_r/](https://www.blasbenito.com/post/02_parallelizing_loops_with_r/)
+
+## Preliminaries
+
+```{r parallelfig1, echo=FALSE, fig.cap="CPU", out.width="45%"}
+knitr::include_graphics("../docs/images/parallel-01.png")
+```
+
+- Node: Single computer consisting of a motherboard and OS.
+- Processor = Socket: physical unit containing
+- Core: the smallest computation unit of the processor
+- Multi-core processor: Physical processor in which many cores are embedded
+- Hardware thread = logical core: computation unit within a core that allows the core to do multiple things at once
+- Worker: an independent process (i.e. computation and provides the result)
+
+## Parallel Computing
+
+- Parallel excecution: divide the queue among many workers that compute at the same times
+- Parallel backend
+    - The way of workers group execute the iterations of the order of the director node.
+    - Provides the means for the director and workers to communicate, while allocating and managing the required computing resources.
+    - **PSOCK and FORK**
+
+## PSOCK
+
+```{r psockfig, echo=FALSE, fig.cap="PSOCK backend"}
+knitr::include_graphics("../docs/images/parallel-02.png")
+```
+
+- Cluster computing
+- launch a new environment of R on each core
+
+## FORK
+
+```{r forkfig, echo=FALSE, fig.cap="FORK backend"}
+knitr::include_graphics("../docs/images/parallel-03.png")
+```
+
+- Multi-core processor
+- duplicate the entire current version of R and move it to a new core
+
+## Difference
+
+| PSOCK (Parallel Socket Cluster) | FORK |  
+|:------|:-----|  
+|both in UNIX and windows | only in UNIX (Mac, Linux, etc) |  
+|Environment of the director needs to be copied to one of each of worker (disadvantage) |Workers share the same environment: highly efficient|  
+|Copying is tricky |Implementing forking is easy |  
+|Each process on each note is unique: cannot be cross-contaminated (advantage) |The fact that the processes are duplicates can cause issues, e.g. random number generation |  
+
+FORK backend was much faster than PSOCK.^[[https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/](https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/)]
+
+## Packages
+
+- `foreach`: Both PSOCK and FORK
+- `parallel`:
+    - `parLapply`, `parSapply`, and `parApply`: Both PSOCK and FORK as `foreach` does
+    - `mclapply`, `pvec`: only FORK
+
+```{r}
+library(foreach)
+```
+
 
 ## `foreach`
 
+- loop
+- `%do`: non-parallel
+- `%dopar`: parallel
+- `.combine`: combine the result
+    - e.g. `.combine = rbind`, `.combind = c`
+    - This makes the code useful
+
+## Non-parallel Example 1
+
+```{r}
+# without combine------
+foreach(i = 1:2) %do% {
+  i
+}
+# combine--------------
+foreach(i = 1:2, .combine = c) %do% {
+  i
+}
+```
+
+## Non-parallel Example 2
+
+```{r}
+foreach(i = 1:3, .combine = bind_rows) %do% {
+  tibble(
+    x = i,
+    y = i + 1
+  )
+}
+```
+
+## Backend - Cluster
+
+```{r}
+parallel::detectCores()
+n_cores <- parallel::detectCores() / 2
+```
+
+```{r}
+(my_cluster <- parallel::makeCluster(n_cores))
+```
+
+## Backend - Register
+
+\tiny
+```{r}
+doParallel::registerDoParallel(cl = my_cluster)
+foreach::getDoParRegistered()
+foreach::getDoParWorkers()
+foreach::getDoParName()
+```
+
+```{r}
+foreach(i = 1:2, .combine = c) %dopar% {
+  i
+}
+```
+\normalsize
+
+When finished, stop the cluster:
+
+\tiny
+```{r}
+parallel::stopCluster(cl = my_cluster)
+```
+\normalsize
+
+## Example \@ref(exm:mcex)
+
+If you want to other packages, you should register them:
+
+\tiny
+```{r}
+my_cluster <- parallel::makeCluster(n_cores)
+doParallel::registerDoParallel(cl = my_cluster)
+parallel::clusterEvalQ(my_cluster, library(magrittr))
+```
+\normalsize
+
+Note: there is `.packages` argument in `foreach` function, it might be easier.
+
+## Example \@ref(exm:mcex) - `foreach`
+
+```{r}
+set.seed(1)
+theta_foreach <- foreach(b = 1:1000, .combine = c) %dopar% {
+  resample(unif_sample)
+}
+# stop cluster---------------------
+parallel::stopCluster(cl = my_cluster)
+```
+
+## Example \@ref(exm:mcex) - result
+
+```{r bootempfig2, fig.cap="Bootstrap Replicates by foreach", echo=FALSE}
+qplot(
+  theta_foreach,
+  geom = "histogram", 
+  bins = 30
+) +
+  theme_minimal() +
+  xlab(expression(theta))
+```
+
+## Forking for `foreach`
+
+- Replace `parallel::makeCluster(n_cores)` with `parallel::makeForkCluster`
+- `doMC::registerDoMC`
+
 ## `doMC::registerDoMC`
+
+- This is quite simple
+- Only one line is need
+- Also, you can define function more easily.
+
+```{r}
+resample_foreach <- function(x, B) {
+  foreach(b = 1:B, .combine = c) %dopar% {
+    resample(x)
+  }
+}
+# implement--------------------------
+doMC::registerDoMC(cores = n_cores)
+theta_domc <- resample_foreach(unif_sample, 1000)
+```
+
+## `parLapply`, `parSapply`, and `parApply`
+
+- Functionals
+- Parallel backend like `foreach`
+- Need additional `parallel::clusterExport(cl, varlist)` for object and function
+
+```{r}
+my_cluster <- parallel::makeCluster(n_cores)
+doParallel::registerDoParallel(cl = my_cluster)
+# parallel::clusterExport(my_cluster, c("unif_sample", "resample"))
+parallel::clusterEvalQ(my_cluster, library(magrittr))
+```
+
+## Example \@ref(exm:mcex) - `parSapply`
+
+```{r}
+set.seed(1)
+theta_apply <- parallel::parSapply(
+  cl = my_cluster,
+  1:1000,
+  function(x) {
+    resample(unif_sample)
+  }
+)
+# stop cluster---------------------
+parallel::stopCluster(cl = my_cluster)
+```
+
+## Example \@ref(exm:mcex) - result of `parSapply`
+
+```{r parsapplyfig, fig.cap="Bootstrap Replicates by mclapply", echo=FALSE}
+qplot(
+  theta_apply,
+  geom = "histogram", 
+  bins = 30
+) +
+  theme_minimal() +
+  xlab(expression(theta))
+```
 
 ## `mclapply`
 
+- `mclapply` is FORK backend
+- Easy to implement
+- `lapply`-way and additional `mc.cores` option
+
+\tiny
+```{r}
+set.seed(1)
+theta_mcapply <- parallel::mclapply(
+  1:1000,
+  function(x) {
+    resample(unif_sample)
+  },
+  mc.cores = n_cores
+)
+```
+\normalsize
+
+## Example \@ref(exm:mcex) - result of `mclapply`
+
+```{r mclapplyfig, fig.cap="Bootstrap Replicates by parSapply", echo=FALSE}
+qplot(
+  theta_mcapply %>% unlist(),
+  geom = "histogram", 
+  bins = 30
+) +
+  theme_minimal() +
+  xlab(expression(theta))
+```
+
 ## `pvec`
+
+- Vector map based on forking backend
+- same as `sapply` option
 
 ## Reproducible Results
 
+- `mclapply` result give not identical results by `set.seed()`
+- It needs some methods
+- See @mccallum2012 and [https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html](https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html)
+
 ## Parallel Options in Popular Funtions
 
-## Simulation using Parallelization
+- `glmnet::cv.glmnet` has `parallel = FALSE` option.
+    - Use `foreach`
+- `boot` has `parallel = c("no", "multicore", "snow")`
 
 ## `Rcpp`
 
+- Although parallelization helps performance of our codes, `Rcpp` might be basically the fastest in the `for` loop scheme
+- Simple Gibbs sampler code in the official site: [https://gallery.rcpp.org/articles/gibbs-sampler/](https://gallery.rcpp.org/articles/gibbs-sampler/)
 
 # R Packages
 
 ## Sources
 
 - @Wickham:2015wq
+- Recommend: Presentation of tidyverse team in last weak
+    - [https://youtu.be/EpTkT6Rkgbs](https://youtu.be/EpTkT6Rkgbs)
 
 ## `devtools`
 
-## Structure and Metadata
+\tiny
+```{r, eval=FALSE}
+install.packages("devtools")
+```
+\normalsize
+
+```{r packagefig1, echo=FALSE, fig.cap="R Package Project", out.width="50%"}
+knitr::include_graphics("../docs/images/package-01.png")
+```
+
+## Metadata
+
+```yaml
+Package: mypackage
+Title: What The Package Does (one line, title case required)
+Version: 0.1
+Authors@R: person("First", "Last", email = "first.last@example.com",
+                  role = c("aut", "cre"))
+Description: What the package does (one paragraph)
+Depends: R (>= 3.1.0)
+License: What license is it under?
+LazyData: true
+```
 
 ## `usethis`
 
+- When write or make files, additional settings are required.
+- `usethis` package do this instead of us
+- e.g. `usethis::use_mit_license("Name")` add Licence file and add this file, write in the description above license, and list into `.Rbuildignore`.
+
 ## Documentation
+
+- Using `roxygen2` package, make help documents
 
 ## Build
 
+- There is `build & reload` button in RStudio
+- but it is not perfect
+- vignettes is not build
+- If you want vignettes, use `devtools::build()`
+
 ## Check
+
+- Check button
+- `devtools::check()`
 
 ## Vignettes
 
+- Long form documentation
+- `usethis::use_vignette("vignette-name")`
+
 ## Test
+
+- `testthat` packate
+- `usethis::use_testthat()`
 
 ## Data
 
+- Adding data in the package
+- `usethis::use_data_raw()`
+- `usethis::use_data()`
 
 # Additional Tips
 
 ## `xlsx2csv`
 
+- `xlsx` file: hard to deal with in `R`
+    - `readxl` package
+    - also has issue
+- Just change the file into `csv`
+- [https://github.com/dilshod/xlsx2csv](https://github.com/dilshod/xlsx2csv)
+- `xlsx2csv -s 3 -m NJClPFECA_SciHub_Data.xlsx ../processed/njcipeca.csv`
+
 ## Pipe
+
+- `marittr` package in `tidyverse` family: `%>%`
+    - RStudio shortcut: command + shift + m or ctrl + shift + m
+- R default pipe operator from 4.1: `|>`
+    - similar to `%>%`
+    - but it cannot be referenced by `.` like `%>%`
+    - e.g. `data %>% lm(y ~ x, data = .)`
 
 ## `kable` and `kableExtra`
 
+- `knitr::kable`: make latex, html, markdown, or pandoc table in R markdown
+- `kableExtra` package: build complex table based on `kable`.
+    - e.g. multirow or multicol latex table
+
 ## Why `tidyverse`?
+
+- [https://stackoverflow.com/questions/tagged/r](https://stackoverflow.com/questions/tagged/r)
+- If you ask or look at the answer in the stackoverflow, people ask the questions with `tidyverse`
+- `tidyverse` provides the insufficiency of pre-processing with base data frame.
 
 ## `tidyverts`
 
+- `forecast`: Time series package made by Rob Hyndman
+- Additionaly, `tidyverts` family was made by the team for tidy version of time series (`ts`)
 
 <!-- cite -->
 # Sources
