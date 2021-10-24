@@ -20,6 +20,6 @@ seminar on 25 Oct, 2021.
 
 ### Slide
 
-See the slide in the following link:
+See the slide in the following link (updated: 24 Oct, 2021):
 
 <https://github.com/ygeunkim/talk-lrdlabseminar2021/blob/master/output/slides/index.pdf>

@@ -11,7 +11,7 @@ output:
     slide_level: 2
     theme: "Antibes"
     colortheme: "beaver"
-    fonttheme: "professionalfonts"
+    fonttheme: "default"
     citation_package: natbib
     latex_engine: lualatex
     includes:
@@ -45,6 +45,7 @@ options(kableExtra.latex.load_packages = FALSE)
 ```{r pkg, include=FALSE, message=FALSE}
 library(tidyverse)
 library(data.table)
+library(foreach)
 library(forecast)
 ```
 
@@ -411,31 +412,25 @@ qplot(
 
 ## Reproducible Documents
 
-::: columns
-
-:::: column
 - Data can be changed while writing the document
 - R Markdown helps reproducibility by integrating Markdown and `R`.
 - Bookdown is a package for authoring books, but it also provides a function for single document: `bookdown::*_document2`
 - See @Xie:2018ui and @Xie:2016uz.
-::::
 
-:::: column
-```{r rmdfig1, echo=FALSE, fig.cap="Making R Markdown", out.width="50%"}
+## New Rmd File
+
+```{r rmdfig1, echo=FALSE, fig.cap="Making R Markdown"}
 knitr::include_graphics("../docs/images/rmd-01.png")
 ```
 
-```{r rmdfig2, echo=FALSE, fig.cap="rmd Default", out.width="50%"}
+```{r rmdfig2, echo=FALSE, fig.cap="rmd Default"}
 knitr::include_graphics("../docs/images/rmd-02.png")
 ```
-::::
-
-:::
 
 ## Style Guides
 
-- See the `tidyverse style guide`^[[https://style.tidyverse.org](https://style.tidyverse.org)]
-- NOT google's
+- Use `The tidyverse style guide`^[[https://style.tidyverse.org](https://style.tidyverse.org)]
+- NOT `Google's R Style Guide`^[[https://google.github.io/styleguide/Rguide.html](https://google.github.io/styleguide/Rguide.html)]
 
 ## Project-Oriented Workflow
 
@@ -454,21 +449,25 @@ knitr::include_graphics("../docs/images/rmd-02.png")
     - @mccallum2012
     - @Matloff:2015wi
 - Blogs:
-    - [https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html](https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html)
-    - [https://www.blasbenito.com/post/02_parallelizing_loops_with_r/](https://www.blasbenito.com/post/02_parallelizing_loops_with_r/)
+    - @michael2018^[[https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html](https://psu-psychology.github.io/r-bootcamp-2018/talks/parallel_r.html)]
+    - @benito2021^[[https://www.blasbenito.com/post/02_parallelizing_loops_with_r/](https://www.blasbenito.com/post/02_parallelizing_loops_with_r/)]
+    - @errickson2017^[[https://dept.stat.lsa.umich.edu/~jerrick/courses/stat701/notes/parallel.html#content](https://dept.stat.lsa.umich.edu/~jerrick/courses/stat701/notes/parallel.html#content)]
+    - @statcompute2019^[[https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/](https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/)]
 
 ## Preliminaries
 
-```{r parallelfig1, echo=FALSE, fig.cap="CPU", out.width="45%"}
+```{r parallelfig1, echo=FALSE, fig.cap="CPU", out.width="40%"}
 knitr::include_graphics("../docs/images/parallel-01.png")
 ```
 
+\footnotesize
 - Node: Single computer consisting of a motherboard and OS.
 - Processor = Socket: physical unit containing
 - Core: the smallest computation unit of the processor
 - Multi-core processor: Physical processor in which many cores are embedded
 - Hardware thread = logical core: computation unit within a core that allows the core to do multiple things at once
 - Worker: an independent process (i.e. computation and provides the result)
+\normalsize
 
 ## Parallel Computing
 
@@ -498,14 +497,17 @@ knitr::include_graphics("../docs/images/parallel-03.png")
 
 ## Difference
 
+\small
 | PSOCK (Parallel Socket Cluster) | FORK |  
 |:------|:-----|  
 |both in UNIX and windows | only in UNIX (Mac, Linux, etc) |  
-|Environment of the director needs to be copied to one of each of worker (disadvantage) |Workers share the same environment: highly efficient|  
+|Environment of the director needs to be copied to one of each of worker (disadvantage) |Workers share the same environment: highly efficient |  
+|Each socket works separately |Each parallel thread is a duplication of master process |  
 |Copying is tricky |Implementing forking is easy |  
 |Each process on each note is unique: cannot be cross-contaminated (advantage) |The fact that the processes are duplicates can cause issues, e.g. random number generation |  
+\normalsize
 
-FORK backend was much faster than PSOCK.^[[https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/](https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/)]
+FORK backend is much faster than PSOCK.^[[https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/](https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/)]
 
 ## Packages
 
@@ -514,21 +516,16 @@ FORK backend was much faster than PSOCK.^[[https://www.r-bloggers.com/2019/06/pa
     - `parLapply`, `parSapply`, and `parApply`: Both PSOCK and FORK as `foreach` does
     - `mclapply`, `pvec`: only FORK
 
-```{r}
-library(foreach)
-```
-
-
 ## `foreach`
 
-- loop
-- `%do`: non-parallel
-- `%dopar`: parallel
+- loop with parallel
+- `%do%`: non-parallel
+- `%dopar%`: parallel
 - `.combine`: combine the result
     - e.g. `.combine = rbind`, `.combind = c`
     - This makes the code useful
 
-## Non-parallel Example 1
+## Non-parallel `foreach` 1
 
 ```{r}
 # without combine------
@@ -541,7 +538,7 @@ foreach(i = 1:2, .combine = c) %do% {
 }
 ```
 
-## Non-parallel Example 2
+## Non-parallel `foreach` 2
 
 ```{r}
 foreach(i = 1:3, .combine = bind_rows) %do% {
@@ -565,42 +562,45 @@ n_cores <- parallel::detectCores() / 2
 
 ## Backend - Register
 
-\tiny
 ```{r}
 doParallel::registerDoParallel(cl = my_cluster)
+```
+
+You can check if the backends were registered well (this process is not required):
+
+```{r}
 foreach::getDoParRegistered()
 foreach::getDoParWorkers()
 foreach::getDoParName()
 ```
+
+## Perform `foreach`
+
+Use `%dopar%` instead of `%do%`:
 
 ```{r}
 foreach(i = 1:2, .combine = c) %dopar% {
   i
 }
 ```
-\normalsize
 
 When finished, stop the cluster:
 
-\tiny
 ```{r}
 parallel::stopCluster(cl = my_cluster)
 ```
-\normalsize
 
 ## Example \@ref(exm:mcex)
 
-If you want to other packages, you should register them:
+- `parallel::clusterEvalQ(cl, c(library(), library()))`: Import library for all workers (required)
+    - Or, there is `.packages` argument in `foreach` function.
+- `parallel::clusterExport(cl, c("object_name", "function_name"))`: Copies variables and functions to each worker
 
-\tiny
 ```{r}
 my_cluster <- parallel::makeCluster(n_cores)
 doParallel::registerDoParallel(cl = my_cluster)
 parallel::clusterEvalQ(my_cluster, library(magrittr))
 ```
-\normalsize
-
-Note: there is `.packages` argument in `foreach` function, it might be easier.
 
 ## Example \@ref(exm:mcex) - `foreach`
 
@@ -636,6 +636,7 @@ qplot(
 - Only one line is need
 - Also, you can define function more easily.
 
+\small
 ```{r}
 resample_foreach <- function(x, B) {
   foreach(b = 1:B, .combine = c) %dopar% {
@@ -646,17 +647,16 @@ resample_foreach <- function(x, B) {
 doMC::registerDoMC(cores = n_cores)
 theta_domc <- resample_foreach(unif_sample, 1000)
 ```
+\normalsize
 
 ## `parLapply`, `parSapply`, and `parApply`
 
 - Functionals
 - Parallel backend like `foreach`
-- Need additional `parallel::clusterExport(cl, varlist)` for object and function
 
 ```{r}
 my_cluster <- parallel::makeCluster(n_cores)
 doParallel::registerDoParallel(cl = my_cluster)
-# parallel::clusterExport(my_cluster, c("unif_sample", "resample"))
 parallel::clusterEvalQ(my_cluster, library(magrittr))
 ```
 
@@ -693,7 +693,6 @@ qplot(
 - Easy to implement
 - `lapply`-way and additional `mc.cores` option
 
-\tiny
 ```{r}
 set.seed(1)
 theta_mcapply <- parallel::mclapply(
@@ -704,7 +703,6 @@ theta_mcapply <- parallel::mclapply(
   mc.cores = n_cores
 )
 ```
-\normalsize
 
 ## Example \@ref(exm:mcex) - result of `mclapply`
 
@@ -760,57 +758,70 @@ install.packages("devtools")
 knitr::include_graphics("../docs/images/package-01.png")
 ```
 
-## Metadata
+## Workflow
 
-```yaml
-Package: mypackage
-Title: What The Package Does (one line, title case required)
-Version: 0.1
-Authors@R: person("First", "Last", email = "first.last@example.com",
-                  role = c("aut", "cre"))
-Description: What the package does (one paragraph)
-Depends: R (>= 3.1.0)
-License: What license is it under?
-LazyData: true
-```
+1. Make function and load function
+2. Metadata and license
+3. Documentation of the function
+4. Checking
+5. Install
+6. Testing
 
 ## `usethis`
 
 - When write or make files, additional settings are required.
 - `usethis` package do this instead of us
-- e.g. `usethis::use_mit_license("Name")` add Licence file and add this file, write in the description above license, and list into `.Rbuildignore`.
+- `usethis::use_r()`: add function file
+
+## Metadata
+
+- DESCRIPTION file: Write about your package
+- [https://github.com/tidyverse/dplyr/blob/master/DESCRIPTION](https://github.com/tidyverse/dplyr/blob/master/DESCRIPTION)
+- use `usethis`
+- `usethis::use_package()`: import other package
+- `usethis::use_*_license("Name")` add Licence file and add this file, write in the description above license, and list into `.Rbuildignore`.
+    - About license: [https://r-pkgs.org/license.html](https://r-pkgs.org/license.html)
+    - MIT license is recommendable: `usethis::use_mit_license("Name")`
 
 ## Documentation
 
 - Using `roxygen2` package, make help documents
+- e.g. [https://r-pkgs.org/man.html](https://r-pkgs.org/man.html)
+- Make `usethis::use_vignette("vignette-name")`
+
+## Vignettes
+
+- Long-form documentation
+- e.g. [https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html](https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html)
 
 ## Build
 
 - There is `build & reload` button in RStudio
 - but it is not perfect
-- vignettes is not build
-- If you want vignettes, use `devtools::build()`
+- vignettes are not build
+- If you want vignettes in the package, use `devtools::build()`
 
-## Check
+## Checking
 
 - Check button
 - `devtools::check()`
 
-## Vignettes
+## Testing
 
-- Long form documentation
-- `usethis::use_vignette("vignette-name")`
-
-## Test
-
-- `testthat` packate
+- [https://r-pkgs.org/tests.html](https://r-pkgs.org/tests.html)
+- Using `testthat` package is easy
 - `usethis::use_testthat()`
 
 ## Data
 
-- Adding data in the package
+- Adding external dataset in the package: e.g. `MASS::Boston`
+- [https://r-pkgs.org/data.html](https://r-pkgs.org/data.html)
 - `usethis::use_data_raw()`
+    - Code for dataset inside `data-raw` folder
+    - add it into `.Rbuildignore`
 - `usethis::use_data()`
+    - Save data as `.Rdata` using this function
+    - Use this in R script of `data-raw` folder
 
 # Additional Tips
 
@@ -818,7 +829,7 @@ LazyData: true
 
 - `xlsx` file: hard to deal with in `R`
     - `readxl` package
-    - also has issue
+    - also has issue e.g. multiple header file \emoji{face-with-thermometer}
 - Just change the file into `csv`
 - [https://github.com/dilshod/xlsx2csv](https://github.com/dilshod/xlsx2csv)
 - `xlsx2csv -s 3 -m NJClPFECA_SciHub_Data.xlsx ../processed/njcipeca.csv`
@@ -837,12 +848,13 @@ LazyData: true
 - `knitr::kable`: make latex, html, markdown, or pandoc table in R markdown
 - `kableExtra` package: build complex table based on `kable`.
     - e.g. multirow or multicol latex table
+    - [https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html)
 
 ## Why `tidyverse`?
 
 - [https://stackoverflow.com/questions/tagged/r](https://stackoverflow.com/questions/tagged/r)
 - If you ask or look at the answer in the stackoverflow, people ask the questions with `tidyverse`
-- `tidyverse` provides the insufficiency of pre-processing with base data frame.
+- `tidyverse` makes R much useful in data-processing \emoji{relieved-face}
 
 ## `tidyverts`
 

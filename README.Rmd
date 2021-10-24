@@ -34,6 +34,6 @@ This is a a repository that includes the slide of talk on LRD lab seminar on `r 
 
 ### Slide
 
-See the slide in the following link:
+See the slide in the following link (updated: `r format(Sys.Date(), '%d %b, %Y')`):
 
 [https://github.com/ygeunkim/talk-lrdlabseminar2021/blob/master/output/slides/index.pdf](https://github.com/ygeunkim/talk-lrdlabseminar2021/blob/master/output/slides/index.pdf)
