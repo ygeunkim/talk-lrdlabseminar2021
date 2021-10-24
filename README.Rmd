@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 options(digits = 3)
 ```
 
-## Talk on LRD Lab Seminar about "R Statistical Computation and Packages"
+## LRD Lab Seminar about "R Statistical Computation and Packages"
 
 <!-- badges: start -->
 [![google-scholar](https://img.shields.io/badge/Google%20Scholar-Click-success?logo=google%20scholar&logoColor=4285F4&style=social)](https://scholar.google.com/citations?user=hM-D53EAAAAJ&hl=ko&authuser=3)
@@ -27,8 +27,8 @@ options(digits = 3)
 
 This is a a repository that includes the slide of talk on LRD lab seminar on `r format(as.Date('2021-10-25'), '%d %b, %Y')`.
 
-- R operations for statists research
-- Parellel computation
+- R computations for statistics research
+- Parallel computation
 - Making R packages
 - Additional tips
 
