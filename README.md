@@ -1,7 +1,14 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-### Talk on LRD Lab Seminar about “R Statistical Computation and Packages”
+## Talk on LRD Lab Seminar about “R Statistical Computation and Packages”
+
+<!-- badges: start -->
+
+[![google-scholar](https://img.shields.io/badge/Google%20Scholar-Click-success?logo=google%20scholar&logoColor=4285F4&style=social)](https://scholar.google.com/citations?user=hM-D53EAAAAJ&hl=ko&authuser=3)
+<!-- badges: end -->
+
+### Overview
 
 This is a a repository that includes the slide of talk on LRD lab
 seminar on 25 Oct, 2021.
@@ -10,3 +17,9 @@ seminar on 25 Oct, 2021.
 -   Parellel computation
 -   Making R packages
 -   Additional tips
+
+### Slide
+
+See the slide in the following link:
+
+<https://github.com/ygeunkim/talk-lrdlabseminar2021/blob/master/output/slides/index.pdf>
